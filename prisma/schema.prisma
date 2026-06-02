@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["public"]
+}
+
+enum TradeDirection {
+  long
+  short
+
+  @@schema("public")
+}
+
+enum TradeResult {
+  win
+  loss
+  be
+
+  @@schema("public")
+}
+
+enum TradeAccount {
+  USC
+  USD
+
+  @@schema("public")
+}
+
+model Trade {
+  id         String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String         @map("user_id") @db.Uuid
+  pair       String
+  account    TradeAccount   @default(USD)
+  direction  TradeDirection
+  profitLoss Decimal        @map("profit_loss") @db.Decimal
+  result     TradeResult
+  reason     String
+  notes      String?
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("trades")
+  @@schema("public")
+}

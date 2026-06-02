@@ -3,15 +3,17 @@
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { TradeDirection, TradeResult } from "@/lib/journal/types";
+import type { TradeAccount, TradeDirection, TradeResult } from "@/lib/journal/types";
 import { cn } from "@/lib/utils";
+
+const forexPairs = ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDCAD", "AUDUSD", "NZDUSD", "XAUUSD"];
 
 type TradeFormValues = {
   pair: string;
+  account: TradeAccount;
   direction: TradeDirection;
   profit_loss: number;
   result: TradeResult;
@@ -25,6 +27,7 @@ type TradeFormProps = {
 };
 
 export function TradeForm({ onCancel, onSave }: TradeFormProps) {
+  const [account, setAccount] = useState<TradeAccount>("USD");
   const [direction, setDirection] = useState<TradeDirection>("long");
   const [result, setResult] = useState<TradeResult>("win");
   const [error, setError] = useState("");
@@ -49,6 +52,7 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
     try {
       await onSave({
         pair,
+        account,
         direction,
         profit_loss: profitLoss,
         result,
@@ -63,19 +67,26 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
   }
 
   return (
-    <Card className="border-emerald-300/20 bg-white/[0.045] shadow-[0_24px_90px_rgba(55,214,122,0.08)]">
-      <CardHeader>
-        <CardTitle className="text-slate-50">Tambah Trade</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form className="grid gap-5" onSubmit={handleSubmit}>
+    <form className="grid gap-5" onSubmit={handleSubmit}>
+          <div className="grid gap-2">
+            <Label>Account</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button className={cn("h-11 rounded-2xl", account === "USD" && "bg-slate-950 text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-slate-200")} onClick={() => setAccount("USD")} type="button" variant={account === "USD" ? "default" : "outline"}>
+                USD
+              </Button>
+              <Button className={cn("h-11 rounded-2xl", account === "USC" && "bg-slate-950 text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-slate-200")} onClick={() => setAccount("USC")} type="button" variant={account === "USC" ? "default" : "outline"}>
+                USC
+              </Button>
+            </div>
+          </div>
+
           <div className="grid gap-2">
             <Label>Direction</Label>
             <div className="grid grid-cols-2 gap-2">
-              <Button className={cn("h-11 rounded-2xl", direction === "long" && "bg-emerald-400 text-slate-950 hover:bg-emerald-300")} onClick={() => setDirection("long")} type="button" variant={direction === "long" ? "default" : "outline"}>
+              <Button className={cn("h-11 rounded-2xl", direction === "long" && "bg-emerald-600 text-white hover:bg-emerald-700")} onClick={() => setDirection("long")} type="button" variant={direction === "long" ? "default" : "outline"}>
                 Long
               </Button>
-              <Button className={cn("h-11 rounded-2xl", direction === "short" && "bg-red-400 text-slate-950 hover:bg-red-300")} onClick={() => setDirection("short")} type="button" variant={direction === "short" ? "default" : "outline"}>
+              <Button className={cn("h-11 rounded-2xl", direction === "short" && "bg-red-600 text-white hover:bg-red-700")} onClick={() => setDirection("short")} type="button" variant={direction === "short" ? "default" : "outline"}>
                 Short
               </Button>
             </div>
@@ -84,7 +95,21 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="pair">Pair</Label>
-              <Input id="pair" name="pair" placeholder="EURUSD" />
+              <select
+                className="border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+                defaultValue=""
+                id="pair"
+                name="pair"
+              >
+                <option value="" disabled>
+                  Pilih pair
+                </option>
+                {forexPairs.map((pair) => (
+                  <option key={pair} value={pair}>
+                    {pair}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="profit_loss">Profit / Loss</Label>
@@ -95,13 +120,13 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
           <div className="grid gap-2">
             <Label>Result</Label>
             <div className="grid grid-cols-3 gap-2">
-              <Button className={cn("h-11 rounded-2xl", result === "win" && "bg-emerald-400 text-slate-950 hover:bg-emerald-300")} onClick={() => setResult("win")} type="button" variant={result === "win" ? "default" : "outline"}>
+              <Button className={cn("h-11 rounded-2xl", result === "win" && "bg-emerald-600 text-white hover:bg-emerald-700")} onClick={() => setResult("win")} type="button" variant={result === "win" ? "default" : "outline"}>
                 Win
               </Button>
-              <Button className={cn("h-11 rounded-2xl", result === "loss" && "bg-red-400 text-slate-950 hover:bg-red-300")} onClick={() => setResult("loss")} type="button" variant={result === "loss" ? "default" : "outline"}>
+              <Button className={cn("h-11 rounded-2xl", result === "loss" && "bg-red-600 text-white hover:bg-red-700")} onClick={() => setResult("loss")} type="button" variant={result === "loss" ? "default" : "outline"}>
                 Loss
               </Button>
-              <Button className={cn("h-11 rounded-2xl", result === "be" && "bg-amber-300 text-slate-950 hover:bg-amber-200")} onClick={() => setResult("be")} type="button" variant={result === "be" ? "default" : "outline"}>
+              <Button className={cn("h-11 rounded-2xl", result === "be" && "bg-amber-600 text-white hover:bg-amber-700")} onClick={() => setResult("be")} type="button" variant={result === "be" ? "default" : "outline"}>
                 BE
               </Button>
             </div>
@@ -117,18 +142,16 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
             <Textarea id="notes" name="notes" placeholder="Opsional" />
           </div>
 
-          {error ? <p className="rounded-2xl border border-red-300/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p> : null}
+          {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p> : null}
 
           <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-            <Button className="h-12 rounded-2xl bg-emerald-400 text-slate-950 hover:bg-emerald-300" disabled={isSaving} type="submit">
+            <Button className="h-12 rounded-2xl bg-slate-950 text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-slate-200" disabled={isSaving} type="submit">
               {isSaving ? "Saving..." : "Save Trade"}
             </Button>
             <Button className="h-12 rounded-2xl" disabled={isSaving} onClick={onCancel} type="button" variant="outline">
               Cancel
             </Button>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+    </form>
   );
 }

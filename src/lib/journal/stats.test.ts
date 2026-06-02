@@ -7,6 +7,7 @@ const trade = (overrides: Partial<Trade>): Trade => ({
   id: "trade-1",
   user_id: "user-1",
   pair: "EURUSD",
+  account: "USD",
   direction: "long",
   profit_loss: 0,
   result: "be",
@@ -24,6 +25,10 @@ describe("calculateJournalStats", () => {
       totalPnl: 0,
       longCount: 0,
       shortCount: 0,
+      accounts: {
+        USC: { totalTrades: 0, totalPnl: 0 },
+        USD: { totalTrades: 0, totalPnl: 0 },
+      },
     });
   });
 
@@ -41,6 +46,23 @@ describe("calculateJournalStats", () => {
       totalPnl: 95,
       longCount: 2,
       shortCount: 2,
+      accounts: {
+        USC: { totalTrades: 0, totalPnl: 0 },
+        USD: { totalTrades: 4, totalPnl: 95 },
+      },
+    });
+  });
+
+  it("calculates account breakdown for USC and USD accounts", () => {
+    const trades: Trade[] = [
+      trade({ id: "1", account: "USD", profit_loss: 25, result: "win" }),
+      trade({ id: "2", account: "USC", profit_loss: -10, result: "loss" }),
+      trade({ id: "3", account: "USC", profit_loss: 5, result: "win" }),
+    ];
+
+    expect(calculateJournalStats(trades).accounts).toEqual({
+      USC: { totalTrades: 2, totalPnl: -5 },
+      USD: { totalTrades: 1, totalPnl: 25 },
     });
   });
 });
