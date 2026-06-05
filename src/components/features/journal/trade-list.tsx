@@ -37,10 +37,12 @@ const directionLabel = {
 export function TradeList({
   onAddTrade,
   onDeleteTrade,
+  onEditTrade,
   trades,
 }: {
   onAddTrade: () => void;
   onDeleteTrade: (tradeId: string) => Promise<void>;
+  onEditTrade: (trade: Trade) => void;
   trades: Trade[];
 }) {
   if (trades.length === 0) {
@@ -108,28 +110,33 @@ export function TradeList({
                       </TableCell>
                       <TableCell className="max-w-80 whitespace-normal text-slate-700 dark:text-slate-300">{trade.reason}</TableCell>
                       <TableCell className="max-w-64 whitespace-normal text-slate-500 dark:text-slate-400">{trade.notes || "-"}</TableCell>
-                      <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button className="h-8 rounded-xl px-3 text-xs" type="button" variant="destructive">
-                              Delete
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete trade?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Trade {trade.pair} akan dihapus permanen dari jurnal kamu.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => void onDeleteTrade(trade.id)} variant="destructive">
+                       <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button className="h-8 rounded-xl px-3 text-xs" onClick={() => onEditTrade(trade)} type="button" variant="outline">
+                            Edit
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button className="h-8 rounded-xl px-3 text-xs" type="button" variant="destructive">
                                 Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete trade?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Trade {trade.pair} akan dihapus permanen dari jurnal kamu.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => void onDeleteTrade(trade.id)} variant="destructive">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

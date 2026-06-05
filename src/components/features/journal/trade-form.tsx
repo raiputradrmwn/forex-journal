@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { TradeAccount, TradeDirection, TradeResult } from "@/lib/journal/types";
+import { normalizeProfitLoss } from "@/lib/journal/trade-values";
 import { cn } from "@/lib/utils";
 
 const forexPairs = ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDCAD", "AUDUSD", "NZDUSD", "XAUUSD"];
@@ -22,14 +23,15 @@ type TradeFormValues = {
 };
 
 type TradeFormProps = {
+  initialValues?: TradeFormValues;
   onCancel: () => void;
   onSave: (values: TradeFormValues) => Promise<void>;
 };
 
-export function TradeForm({ onCancel, onSave }: TradeFormProps) {
-  const [account, setAccount] = useState<TradeAccount>("USD");
-  const [direction, setDirection] = useState<TradeDirection>("long");
-  const [result, setResult] = useState<TradeResult>("win");
+export function TradeForm({ initialValues, onCancel, onSave }: TradeFormProps) {
+  const [account, setAccount] = useState<TradeAccount>(initialValues?.account ?? "USD");
+  const [direction, setDirection] = useState<TradeDirection>(initialValues?.direction ?? "long");
+  const [result, setResult] = useState<TradeResult>(initialValues?.result ?? "win");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -54,7 +56,7 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
         pair,
         account,
         direction,
-        profit_loss: profitLoss,
+        profit_loss: normalizeProfitLoss(profitLoss, result),
         result,
         reason,
         notes: notes || null,
@@ -97,7 +99,7 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
               <Label htmlFor="pair">Pair</Label>
               <select
                 className="border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
-                defaultValue=""
+                defaultValue={initialValues?.pair ?? ""}
                 id="pair"
                 name="pair"
               >
@@ -113,7 +115,7 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="profit_loss">Profit / Loss</Label>
-              <Input id="profit_loss" name="profit_loss" placeholder="25" step="0.01" type="number" />
+              <Input defaultValue={initialValues ? Math.abs(initialValues.profit_loss) : undefined} id="profit_loss" name="profit_loss" placeholder="25" step="0.01" type="number" />
             </div>
           </div>
 
@@ -134,19 +136,19 @@ export function TradeForm({ onCancel, onSave }: TradeFormProps) {
 
           <div className="grid gap-2">
             <Label htmlFor="reason">Reason Entry</Label>
-            <Textarea id="reason" name="reason" placeholder="Breakout valid setelah retest support" />
+            <Textarea defaultValue={initialValues?.reason} id="reason" name="reason" placeholder="Breakout valid setelah retest support" />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="notes">Catatan Emosi</Label>
-            <Textarea id="notes" name="notes" placeholder="Opsional" />
+            <Textarea defaultValue={initialValues?.notes ?? undefined} id="notes" name="notes" placeholder="Opsional" />
           </div>
 
           {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p> : null}
 
           <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
             <Button className="h-12 rounded-2xl bg-slate-950 text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-slate-200" disabled={isSaving} type="submit">
-              {isSaving ? "Saving..." : "Save Trade"}
+              {isSaving ? "Saving..." : initialValues ? "Update Trade" : "Save Trade"}
             </Button>
             <Button className="h-12 rounded-2xl" disabled={isSaving} onClick={onCancel} type="button" variant="outline">
               Cancel

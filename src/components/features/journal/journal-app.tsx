@@ -32,6 +32,7 @@ export function JournalApp() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(hasSupabaseConfig);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -122,6 +123,31 @@ export function JournalApp() {
     await loadTrades();
   }
 
+  async function updateTrade(values: TradeInsert) {
+    if (!supabase || !user || !editingTrade) return;
+
+    const { error: updateError } = await supabase
+      .from("trades")
+      .update(values)
+      .eq("id", editingTrade.id)
+      .eq("user_id", user.id);
+
+    if (updateError) throw updateError;
+    setEditingTrade(null);
+    setIsFormOpen(false);
+    await loadTrades();
+  }
+
+  function openCreateForm() {
+    setEditingTrade(null);
+    setIsFormOpen(true);
+  }
+
+  function openEditForm(trade: Trade) {
+    setEditingTrade(trade);
+    setIsFormOpen(true);
+  }
+
   async function deleteTrade(tradeId: string) {
     if (!supabase || !user) return;
     setError("");
@@ -167,7 +193,7 @@ export function JournalApp() {
         </Button>
       </header>
 
-      <Button className="h-14 rounded-2xl bg-slate-950 text-base font-semibold text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-slate-200" onClick={() => setIsFormOpen(true)}>
+      <Button className="h-14 rounded-2xl bg-slate-950 text-base font-semibold text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-slate-200" onClick={openCreateForm}>
         + Tambah Trade
       </Button>
 
@@ -175,21 +201,40 @@ export function JournalApp() {
 
       {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p> : null}
       {isPending ? <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data terbaru...</p> : null}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={(open) => {
+        setIsFormOpen(open);
+        if (!open) setEditingTrade(null);
+      }}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Tambah Trade</DialogTitle>
+            <DialogTitle>{editingTrade ? "Edit Trade" : "Tambah Trade"}</DialogTitle>
             <DialogDescription>
-              Isi jurnal cepat seperti baris baru di spreadsheet trading kamu.
+              {editingTrade ? "Update detail trade yang sudah tersimpan." : "Isi jurnal cepat seperti baris baru di spreadsheet trading kamu."}
             </DialogDescription>
           </DialogHeader>
-          <TradeForm onCancel={() => setIsFormOpen(false)} onSave={saveTrade} />
+          <TradeForm
+            key={editingTrade?.id ?? "new-trade"}
+            initialValues={editingTrade ? {
+              account: editingTrade.account,
+              direction: editingTrade.direction,
+              notes: editingTrade.notes,
+              pair: editingTrade.pair,
+              profit_loss: editingTrade.profit_loss,
+              reason: editingTrade.reason,
+              result: editingTrade.result,
+            } : undefined}
+            onCancel={() => {
+              setIsFormOpen(false);
+              setEditingTrade(null);
+            }}
+            onSave={editingTrade ? updateTrade : saveTrade}
+          />
         </DialogContent>
       </Dialog>
 
       <ChartPreview trades={trades} />
 
-      <TradeList onAddTrade={() => setIsFormOpen(true)} onDeleteTrade={deleteTrade} trades={trades} />
+      <TradeList onAddTrade={openCreateForm} onDeleteTrade={deleteTrade} onEditTrade={openEditForm} trades={trades} />
 
       <a className="justify-self-center text-xs text-slate-400 transition hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-400" href="https://rhnworks.vercel.app/" rel="noreferrer" target="_blank">
         Created By RHN
